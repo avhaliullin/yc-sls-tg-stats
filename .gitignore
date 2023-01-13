@@ -1,0 +1,11 @@
+venv/
+*.session
+*.egg-info
+.tox
+.env
+.coverage
+.python-version
+*.csv
+data/
+__pycache__/
+.idea/
