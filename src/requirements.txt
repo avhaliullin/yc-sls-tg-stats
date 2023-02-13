@@ -1,0 +1,4 @@
+Telethon~=1.26.1
+yandexcloud
+clickhouse_connect
+python-json-logger
