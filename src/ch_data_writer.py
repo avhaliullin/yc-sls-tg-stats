@@ -39,12 +39,16 @@ class CHDataWriter:
                                    'is_verified'])
             _LOGGER.info(f'Updated {len(data)} participants')
 
-    async def write_participants(self, client: TelegramClient, target_group: Channel | InputChannel) -> None:
+    async def write_participants(self, client: TelegramClient, target_group: Channel | InputChannel,
+                                 deadline: datetime.datetime) -> None:
         group_name = target_group.title
         _LOGGER.info(f'Updating participants for group {group_name}')
         try:
             participants = list()
             async for participant in client.iter_participants(target_group):
+                if datetime.datetime.now() > deadline:
+                    _LOGGER.warning("Timeout exceeded, will continue in next function run")
+                    break
                 assert isinstance(participant, User)
                 if not participant.deleted:
                     participants.append(participant)
@@ -87,7 +91,7 @@ class CHDataWriter:
                                             'reply_to'])
 
     async def write_messages(self, client: TelegramClient, target_group: Channel | InputChannel,
-                             messages_after: datetime.datetime) -> None:
+                             messages_after: datetime.datetime, deadline: datetime.datetime) -> None:
         group_name = target_group.title
         max_id_rs = self.ch_client.query(
             query='SELECT message_id FROM messages WHERE group_id = {g:UInt64} ORDER BY dt DESC, message_id DESC LIMIT 1',
@@ -100,6 +104,9 @@ class CHDataWriter:
         data = list()
         async for message in client.iter_messages(target_group, limit=None, reverse=True,
                                                   offset_id=max_id, offset_date=messages_after):  # type: Message
+            if datetime.datetime.now() > deadline:
+                _LOGGER.warning("Timeout exceeded, will continue in next function run")
+                break
             if not isinstance(message, (BasicMessage, MessageService)):
                 _LOGGER.error(f'Message of type "{type(message)}" is not supported yet, it will not be saved')
                 continue

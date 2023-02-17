@@ -14,7 +14,8 @@ from telethon.tl.types import Channel, InputChannel
 
 from ch_data_writer import CHDataWriter
 
-_MESSAGES_AFTER: datetime.datetime = datetime.datetime(2023, 1, 1, tzinfo=datetime.timezone.utc)
+_MESSAGES_AFTER_DEFAULT: datetime.datetime = datetime.datetime(2023, 1, 1, tzinfo=datetime.timezone.utc)
+_TIMEOUT_SECONDS_DEFAULT = 4 * 60
 # > > > > > > > > >
 
 
@@ -30,6 +31,22 @@ async def run(event, context) -> None:
     api_hash = os.environ.get('API_HASH')
     api_id = int(os.environ.get('API_ID'))
     session_str = os.environ.get('SESSION_STR')
+    messages_after_str = os.environ.get('MESSAGES_AFTER')
+    messages_after = _MESSAGES_AFTER_DEFAULT
+    if messages_after_str is not None:
+        try:
+            messages_after = datetime.datetime.strptime(messages_after_str, '%Y-%m-%d')
+        except ValueError as e:
+            _LOGGER.warning(f'Failed to parse date from MESSAGES_AFTER={messages_after_str}'
+                            f' using default: {messages_after}. Error: {e}')
+    timeout_seconds_str = os.environ.get('TIMEOUT_SECONDS')
+    timeout_seconds = _TIMEOUT_SECONDS_DEFAULT
+    if timeout_seconds_str is not None:
+        try:
+            timeout_seconds = int(timeout_seconds_str)
+        except ValueError as e:
+            _LOGGER.warning(f'Invalid value for TIMEOUT_SECONDS: {e}')
+    deadline = datetime.datetime.now() + datetime.timedelta(seconds=timeout_seconds)
 
     ch_writer = CHDataWriter(
         hostname=os.environ.get('CH_HOST'),
@@ -54,8 +71,8 @@ async def run(event, context) -> None:
 
         tasks = list()
         for group in groups:
-            tasks.append(ch_writer.write_messages(client, group, _MESSAGES_AFTER))
-            tasks.append(ch_writer.write_participants(client, group))
+            tasks.append(ch_writer.write_messages(client, group, messages_after, deadline))
+            tasks.append(ch_writer.write_participants(client, group, deadline))
         tasks.append(ch_writer.write_groups(groups))
         await asyncio.gather(*tasks)
         _LOGGER.info("Done updating tg stats")

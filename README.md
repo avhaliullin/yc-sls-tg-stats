@@ -3,7 +3,9 @@
 # Пререквизиты
 1. Развернутый кластер yandex managed clickhouse с публичным доступом
 2. Python 3.11 на ноутбуке
-3. terraform на ноутбуке
+3. terraform v1.3.0 или выше на ноутбуке
+
+_Если вы испытываете проблемы с установкой или использованием terraform - изучите [инструкцию](https://cloud.yandex.ru/docs/tutorials/infrastructure-management/terraform-quickstart) в документации Яндекс Облака._
 
 # Notes
 Здесь показано использование CH с публичным доступом. При наличии на облаке [флага](https://cloud.yandex.ru/docs/functions/concepts/networking#polzovatelskaya-set) для запуска функций в VPC - можно все провернуть без публичного доступа, но мы сталкиваемся с ограничениями tf для функций.
