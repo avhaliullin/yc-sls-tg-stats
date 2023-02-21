@@ -129,7 +129,7 @@ class CHDataWriter:
         data = list()
         topics_set = set()
         async for message in client.iter_messages(target_group, limit=None, reverse=True,
-                                                  offset_id=0, offset_date=messages_after):  # type: Message
+                                                  offset_id=max_id, offset_date=messages_after):  # type: Message
             if datetime.datetime.now() > deadline:
                 _LOGGER.warning("Timeout exceeded, will continue in next function run")
                 break
